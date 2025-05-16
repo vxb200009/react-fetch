@@ -14,6 +14,112 @@ interface PostEdit {
 }
 
 const PostList: React.FC = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editingPost, setEditingPost] = useState<PostEdit | null>(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch posts');
+        }
+        const data = await response.json();
+        setPosts(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const updatePost = async (postId: number, updatedPost: PostEdit) => {
+    try {
+      setUpdateLoading(true);
+      const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedPost),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update post');
+      }
+
+      const updatedData = await response.json();
+      // Find the index of the post to update
+      const index = posts.findIndex(post => post.id === postId);
+      if (index !== -1) {
+        // Create a new array with the updated post
+        const newPosts = [...posts];
+        newPosts[index] = { ...posts[index], ...updatedData };
+        setPosts(newPosts);
+      }
+      setEditingPost(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update post');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const handleEdit = (post: Post) => {
+    setEditingPost({
+      id: post.id,
+      title: post.title,
+      body: post.body
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPost(null);
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  const postListStyle = {
+    maxWidth: '50rem',
+    margin: '0 auto',
+    padding: '1.25rem'
+  };
+
+  const postItemStyle = {
+    backgroundColor: '#f5f5f5',
+    borderRadius: '0.5rem',
+    padding: '1.25rem',
+    marginBottom: '1.25rem',
+    boxShadow: '0 0.125rem 0.25rem rgba(0,0,0,0.1)'
+  };
+
+  const postTitleStyle = {
+    marginTop: '0',
+    color: '#333'
+  };
+
+  const postBodyStyle = {
+    margin: '0.625rem 0',
+    color: '#666'
+  };
+
+  const postUserStyle = {
+    color: '#999',
+    display: 'block'
+  };
+
   return (
     <div style={postListStyle}>
       <h1>Posts</h1>
