@@ -10,12 +10,13 @@ export default function ProductList() {
     useEffect(()=>{
         const fetchProducts = async()=>{
             try{
-                const response = await fetch('https://dummyjson.com/products');
+                const response = await fetch('https://dummyjson.com/todos');
                 if(!response.ok){
                     throw new Error('Failed to fetch products');
                 }
                 const data = await response.json();
-                setProducts(data?.products);
+                console.log(data);
+                setProducts(data?.todos);
                 console.log(data);
             }
             catch(err){
@@ -47,13 +48,9 @@ export default function ProductList() {
                         margin:"1rem",
                         borderRadius:"5px"
                     }}>
-                        <p>{product.title}</p>
-                        <p>{product.description}</p>
-                        <p>{product.price}</p>
-                        <p>{product.rating}</p>
-                        <p>{product.stock}</p>
-                        <p>{product.thumbnail}</p>
-                        <p>{product.images}</p>
+                        <p>Task: {product.todo}</p>
+                        <p>Status: {product.completed?"Completed":"Pending"}</p>
+                        
                     </div>
                 )
             })}
