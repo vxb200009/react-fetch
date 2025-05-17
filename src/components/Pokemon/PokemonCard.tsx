@@ -3,13 +3,11 @@ import { Pokemon } from '../../types/pokemon';
 
 interface PokemonCardProps {
   pokemon: Pokemon;
-  cache: Map<number, Pokemon>;
   onClick?: () => void;
 }
 
-export const PokemonCard: React.FC<PokemonCardProps> = React.memo(({ pokemon, cache, onClick }) => {
-  const cachedPokemon = cache.get(pokemon.id);
-  const type = cachedPokemon?.types?.[0]?.type?.name || 'unknown';
+export const PokemonCard: React.FC<PokemonCardProps> = React.memo(({ pokemon, onClick }) => {
+  const type = pokemon.types?.[0]?.type?.name || 'unknown';
 
   return (
     <div
