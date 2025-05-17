@@ -7,23 +7,24 @@ interface UsePokemonListReturn {
   error: string | null;
   hasMore: boolean;
   loadMore: () => void;
-  cache: Map<number, Pokemon>;
 }
 
 export const usePokemonList = (): UsePokemonListReturn => {
-  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [pokemonList, setPokemonList] = useState<Set<Pokemon>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [cache, setCache] = useState<Map<number, Pokemon>>(new Map());
+  const [nextUrl, setNextUrl] = useState<string | null>("https://pokeapi.co/api/v2/pokemon?limit=20&offset=0");
 
-  const fetchPokemon = useCallback(async (currentPage: number) => {
+  const fetchPokemon = useCallback(async () => {
+    if (!nextUrl || loading) return;
+    
     try {
       setLoading(true);
       setError(null);
+      console.log("Fetching from:", nextUrl);
       
-      const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=20&offset=${(currentPage - 1) * 20}`);
+      const response = await fetch(nextUrl);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -42,38 +43,35 @@ export const usePokemonList = (): UsePokemonListReturn => {
         })
       );
 
-      // Update cache with new Pokemon details
-      const newCache = new Map(cache);
-      pokemonDetails.forEach((pokemon) => {
-        newCache.set(pokemon.id, pokemon);
-      });
-      setCache(newCache);
-
-      setPokemonList(prev => [...prev, ...data.results]);
+      setPokemonList(prev => new Set([...Array.from(prev), ...pokemonDetails]));
       setHasMore(!!data.next);
+      setNextUrl(data.next);
+      console.log("Fetched pokemon:", pokemonDetails);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch Pokemon data');
     } finally {
       setLoading(false);
     }
-  }, [cache]);
+  }, [nextUrl, loading]);
 
   const loadMore = useCallback(() => {
-    if (!loading && hasMore) {
-      setPage(prev => prev + 1);
+    if (!loading && hasMore && nextUrl) {
+      fetchPokemon();
     }
-  }, [loading, hasMore]);
+  }, [loading, hasMore, nextUrl, fetchPokemon]);
 
+  // Initial fetch
   useEffect(() => {
-    fetchPokemon(page);
-  }, [page, fetchPokemon]);
+    fetchPokemon();
+    // We only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
-    pokemonList,
+    pokemonList: Array.from(pokemonList),
     loading,
     error,
     hasMore,
     loadMore,
-    cache,
   };
 };
