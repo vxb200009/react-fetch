@@ -5,7 +5,7 @@ import { PokemonErrorBoundary } from './Pokemon/PokemonErrorBoundary';
 import { PokemonCard } from './Pokemon/PokemonCard';
 
 const PokemonList: React.FC = () => {
-  const { pokemonList, loading, error, hasMore, loadMore, cache } = usePokemonList();
+  const { pokemonList, loading, error, hasMore, loadMore } = usePokemonList();
   const observer = useRef<IntersectionObserver | null>(null);
   const lastPokemonRef = useRef<HTMLDivElement>(null);
 
@@ -13,7 +13,6 @@ const PokemonList: React.FC = () => {
     window.location.reload();
   }, []);
 
-  // Set up intersection observer for infinite scrolling
   useEffect(() => {
     if (loading) return;
     
@@ -69,14 +68,16 @@ const PokemonList: React.FC = () => {
           padding: '0 1rem',
         }}>
           {pokemonList.map((pokemon, index) => {
+            const uniqueKey = `${pokemon.id}-${pokemon.name}`;
+            
             if (index === pokemonList.length - 1) {
               return (
-                <div key={pokemon.name} ref={lastPokemonRef}>
-                  <PokemonCard pokemon={pokemon} cache={cache} />
+                <div key={uniqueKey} ref={lastPokemonRef}>
+                  <PokemonCard pokemon={pokemon} />
                 </div>
               );
             }
-            return <PokemonCard key={pokemon.name} pokemon={pokemon} cache={cache} />;
+            return <PokemonCard key={uniqueKey} pokemon={pokemon} />;
           })}
         </div>
         
